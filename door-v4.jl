@@ -178,8 +178,10 @@ function h(y1, y2, y3, y4; r = radius)
 end;
 
 # ╔═╡ aef6cf17-0c2f-4d4b-b09e-85a9b157730f
-@model function door_model(y, nr_steps, γ, A, B, C, goals)
+@model function door_model(nr_steps, γ, A, B, C, goals)
 
+	local y
+	
 	# single agent models
 	for k in 1:4
 
@@ -269,23 +271,22 @@ end;
 # ╔═╡ d371cca1-188c-41e1-98c7-024f927ef4c7
 init = @initialization begin
     # Initialize messages
-    μ(σ2) = repeat([PointMass(1)], nr_steps)
-    μ(z_σ2) = repeat([PointMass(1)], 4, nr_steps)
-    μ(u) = repeat([PointMass(0)], nr_steps)
+    q(dσ2) = repeat([PointMass(1)], nr_steps)
+    q(zσ2) = repeat([PointMass(1)], 4, nr_steps)
+    q(u) = repeat([PointMass(0)], nr_steps)
+
+	μ(x) = MvNormalMeanCovariance(randn(4), 100I)
+	μ(y) = MvNormalMeanCovariance(randn(2), 100I)
 
     # Initialize variables
-    q(x) = MvNormalMeanCovariance(randn(4), 100I)
-    q(y) = MvNormalMeanCovariance(randn(2), 100I)
+    # q(x) = MvNormalMeanCovariance(randn(4), 100I)
+    # q(y) = MvNormalMeanCovariance(randn(2), 100I)
 end
-
-# ╔═╡ a68f6988-64ed-42be-88da-b45b9a1a5b15
-# fake data
-y_fake = MvNormalMeanCovariance(randn(2), 100I)
 
 # ╔═╡ e8dc5e93-e6a6-40ce-97a4-079bd9e3b511
 results = infer(
 	model 			= door_model(nr_steps = nr_steps, γ = γ, A = A, B = B, C = C),
-	data  			= ( y = y_fake,  goals = goals, ),
+	data  			= ( goals = goals, ),
 	initialization  = init,
 	constraints 	= door_constraints(),
 	meta 			= door_meta,
@@ -294,8 +295,104 @@ results = infer(
 	options = ( limit_stack_depth = 300, )
 )
 
-# ╔═╡ 283e811c-04a5-4001-a5d7-88634ea0f1ff
+# ╔═╡ c78c6bcd-26c2-4eb8-8a49-a69bca8898fd
+md"""
+## Results
+"""
 
+# ╔═╡ 1d1b1b37-2cd8-42f6-beb7-94f37f798a49
+begin
+	if save_figures
+		animation = @animate for t in 1:nr_steps
+			plot(size = (0.8*600, 600), legend=false)
+	
+			plot!(
+				map(x -> mean(x)[1], results.posteriors[:y][1,1:t]),
+				map(x -> mean(x)[2], results.posteriors[:y][1,1:t]);
+				color="red", linestyle=:dash
+			)
+			plot!(
+				map(x -> mean(x)[1], results.posteriors[:y][2,1:t]),
+				map(x -> mean(x)[2], results.posteriors[:y][2,1:t]);
+				color="blue", linestyle=:dash
+			)
+			plot!(
+				map(x -> mean(x)[1], results.posteriors[:y][3,1:t]),
+				map(x -> mean(x)[2], results.posteriors[:y][3,1:t]);
+				color="orange", linestyle=:dash
+			)
+			plot!(
+				map(x -> mean(x)[1], results.posteriors[:y][4,1:t]),
+				map(x -> mean(x)[2], results.posteriors[:y][4,1:t]);
+				color="green", linestyle=:dash
+			)
+		
+			draw_circle!(mean(results.posteriors[:y][1,t]), radius; color="red", label="")
+			draw_circle!(mean(results.posteriors[:y][2,t]), radius; color="blue", label="")
+			draw_circle!(mean(results.posteriors[:y][3,t]), radius; color="orange", label="")
+			draw_circle!(mean(results.posteriors[:y][4,t]), radius; color="green", label="")
+	
+			draw_rectangle!(environment[1]; label="", color="black", alpha=0.5)
+			draw_rectangle!(environment[2]; label="", color="black", alpha=0.5)
+		
+			scatter!([goals[2,1][1]], [goals[2,1][3]], color="red", label="", marker=:star5, markersize=10)
+			scatter!([goals[2,2][1]], [goals[2,2][3]], color="blue", label="", marker=:star5, markersize=10)
+			scatter!([goals[2,3][1]], [goals[2,3][3]], color="orange", label="", marker=:star5, markersize=10)
+			scatter!([goals[2,4][1]], [goals[2,4][3]], color="green", label="", marker=:star5, markersize=10)
+			
+			xlims!(-20, 20)
+			ylims!(-25, 25)
+			
+		end
+		gif(animation, "exports/door.gif", fps = 15)
+
+	else
+
+		@gif for t in 1:nr_steps
+			plot(size = (0.8*600, 600), legend=false)
+	
+			plot!(
+				map(x -> mean(x)[1], results.posteriors[:y][1,1:t]),
+				map(x -> mean(x)[2], results.posteriors[:y][1,1:t]);
+				color="red", linestyle=:dash
+			)
+			plot!(
+				map(x -> mean(x)[1], results.posteriors[:y][2,1:t]),
+				map(x -> mean(x)[2], results.posteriors[:y][2,1:t]);
+				color="blue", linestyle=:dash
+			)
+			plot!(
+				map(x -> mean(x)[1], results.posteriors[:y][3,1:t]),
+				map(x -> mean(x)[2], results.posteriors[:y][3,1:t]);
+				color="orange", linestyle=:dash
+			)
+			plot!(
+				map(x -> mean(x)[1], results.posteriors[:y][4,1:t]),
+				map(x -> mean(x)[2], results.posteriors[:y][4,1:t]);
+				color="green", linestyle=:dash
+			)
+		
+			draw_circle!(mean(results.posteriors[:y][1,t]), radius; color="red", label="")
+			draw_circle!(mean(results.posteriors[:y][2,t]), radius; color="blue", label="")
+			draw_circle!(mean(results.posteriors[:y][3,t]), radius; color="orange", label="")
+			draw_circle!(mean(results.posteriors[:y][4,t]), radius; color="green", label="")
+	
+			draw_rectangle!(environment[1]; label="", color="black", alpha=0.5)
+			draw_rectangle!(environment[2]; label="", color="black", alpha=0.5)
+		
+			scatter!([goals[2,1][1]], [goals[2,1][3]], color="red", label="", marker=:star5, markersize=10)
+			scatter!([goals[2,2][1]], [goals[2,2][3]], color="blue", label="", marker=:star5, markersize=10)
+			scatter!([goals[2,3][1]], [goals[2,3][3]], color="orange", label="", marker=:star5, markersize=10)
+			scatter!([goals[2,4][1]], [goals[2,4][3]], color="green", label="", marker=:star5, markersize=10)
+			
+			xlims!(-20, 20)
+			ylims!(-25, 25)
+			
+		end
+		
+	end
+	
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -2245,8 +2342,8 @@ version = "1.4.1+2"
 # ╠═b3b2f8b4-4d9e-4f11-aea8-0fc2cb579ef8
 # ╠═89924abe-4b80-4206-8682-86339e106e86
 # ╠═d371cca1-188c-41e1-98c7-024f927ef4c7
-# ╠═a68f6988-64ed-42be-88da-b45b9a1a5b15
 # ╠═e8dc5e93-e6a6-40ce-97a4-079bd9e3b511
-# ╠═283e811c-04a5-4001-a5d7-88634ea0f1ff
+# ╠═c78c6bcd-26c2-4eb8-8a49-a69bca8898fd
+# ╠═1d1b1b37-2cd8-42f6-beb7-94f37f798a49
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
