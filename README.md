@@ -1,6 +1,7 @@
 # Multi-Agent Trajectory Planning with NUV Priors
 *By Bart van Erp, Dmitry Bagaev, Albert Podusenko Ismail Senoz and Bert de Vries*
 
+
 ---
 **Abstract**
 
@@ -10,8 +11,13 @@ This paper presents a probabilistic model-based approach to centralized multi-ag
 <div style="display: flex; align-items: center; flex-wrap: nowrap; flex-direction: row; width: 100%"><img src="exports/switching_positions.gif" width="30%"/><img src="exports/crossroads.gif" width="37.5%"/><img src="exports/door.gif" width="30%"/>
 </div>
 
----
-This repository contains all experiments of the paper.
+
+**Update by [Michi-Tsubaki](@Michi-Tsubaki)**
+
+This branch provides the code extended for 3d space. The source code is [here](https://github.com/Michi-Tsubaki/MultiAgentTrajectoryPlanning/blob/cf0172e5d50ce7e679e9b5623e8609ac995d8832/3d-space.jl). If you have any questions, please contact me.
+<div style="display: flex; align-items: center; flex-wrap: nowrap; flex-direction: row; width: 100%"><img src="exports/example_1.gif" width="50%"/><img src="exports/example_2.gif" width="50%"/>
+</div>
+
 
 ## Installation instructions
 1. Install [Julia](https://julialang.org/)
